@@ -96,7 +96,7 @@ Needs authentication
 ```
 vacation_planner/
 ├── alembic/
-│   ├── versions/        # migration files
+│   ├── versions/
 │   └── env.py
 ├── src/
 │   ├── main.py
