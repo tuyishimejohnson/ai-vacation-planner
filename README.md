@@ -90,3 +90,41 @@ Needs authentication
 
 - `POST /itineraries/` - create an itinerary for a trip
 - `GET /itineraries/{trip_id}` - get itinerary by trip ID
+
+## Project Structure
+
+```
+vacation_planner/
+├── alembic/
+│   ├── versions/
+│   └── env.py
+├── src/
+│   ├── main.py
+│   ├── auth/
+│   │   ├── controller.py
+│   │   ├── service.py
+│   │   └── model.py
+│   ├── users/
+│   │   ├── controller.py
+│   │   ├── service.py
+│   │   └── model.py
+│   ├── trips/
+│   │   ├── controller.py
+│   │   ├── service.py
+│   │   └── model.py
+│   ├── itineraries/
+│   │   ├── controller.py
+│   │   ├── service.py
+│   │   └── model.py
+│   ├── entities/
+│   │   ├── user.py
+│   │   ├── trip.py
+│   │   └── itinerary.py
+│   └── database/
+│       └── core.py
+├── .env
+├── .env.example
+├── alembic.ini
+├── pyproject.toml
+└── uv.lock
+```
