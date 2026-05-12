@@ -27,7 +27,7 @@ A backend API for planning vacations, built with FastAPI. Users can manage trips
 
 ```bash
 git clone https://github.com/tuyishimejohnson/ai-vacation-planner.git
-cd vacation-planner
+cd ai-vacation-planner
 ```
 
 **2. Set up the environment**
