@@ -8,7 +8,10 @@ from .model import ItineraryCreateRequest
 
 
 def create_itinerary(itinerary: ItineraryCreateRequest, db: Session):
-    new_itinerary = Itinerary(trip_id=itinerary.trip_id, days=itinerary.days)
+    new_itinerary = Itinerary(
+        trip_id=itinerary.trip_id,
+        days=[day.model_dump() for day in itinerary.days],
+    )
     db.add(new_itinerary)
     db.commit()
     db.refresh(new_itinerary)
