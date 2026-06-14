@@ -45,7 +45,11 @@ def generate_itinerary_with_claude(user_id: int, trip_id: int, db: Session):
             detail="No trips found for this user",
         )
 
-    trip = next((t for t in trips if t.id == trip_id), None)
+    trip = None
+    for trip in trips:
+        if trip.id == trip_id:
+            trip = trip
+            break
 
     if not trip:
         raise HTTPException(
@@ -78,6 +82,7 @@ def generate_itinerary_with_claude(user_id: int, trip_id: int, db: Session):
 
     first_response = response.content[0].text
 
+    # change text to JSON format
     try:
         clean_response = (
             first_response.replace("```json", "").replace("```", "").strip()
@@ -90,12 +95,25 @@ def generate_itinerary_with_claude(user_id: int, trip_id: int, db: Session):
             detail="invalid JSON",
         )
 
-    # retrieve itineraries in db and check if there is none created and create it
-    all_itineraries = db.query(Itinerary).filter(Itinerary.trip_id == trip_id).all()
+    # Check if an itinerary already exists for this trip before creating a new one
+    existing = db.query(Itinerary).filter(Itinerary.trip_id == trip_id).first()
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Itinerary already exists",
+        )
 
-    print("all itineraries", all_itineraries)
+    # Convert the parsed JSON dict into an orm to send to db
+    new_itinerary = Itinerary(
+        trip_id=itinerary_json["trip_id"],
+        days=itinerary_json["days"],
+    )
 
-    return {"itinerary": itinerary_json}
+    db.add(new_itinerary)
+    db.commit()
+    db.refresh(new_itinerary)
+
+    return {"itinerary": new_itinerary}
 
 
 def create_itinerary(db: db_dependency, itinerary: ItineraryCreateRequest):
@@ -115,3 +133,7 @@ def get_itinerary_by_trip_id(trip_id: int, db: Session):
             status_code=status.HTTP_404_NOT_FOUND, detail="Itinerary not found"
         )
     return itinerary
+
+
+def get_all_itineraries(db: Session):
+    return db.query(Itinerary).all()

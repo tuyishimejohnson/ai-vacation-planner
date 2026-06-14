@@ -34,3 +34,8 @@ async def create_itinerary(
 @router.get("/{trip_id}", status_code=status.HTTP_200_OK)
 async def get_itinerary_by_trip_id(trip_id: int, db: db_dependency):
     return service.get_itinerary_by_trip_id(trip_id, db)
+
+
+@router.get("/", status_code=status.HTTP_200_OK)
+async def get_all_itineraries(db: db_dependency):
+    return service.get_all_itineraries(db=db)
