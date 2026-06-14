@@ -45,11 +45,8 @@ def generate_itinerary_with_claude(user_id: int, trip_id: int, db: Session):
             detail="No trips found for this user",
         )
 
-    trip = None
-    for trip in trips:
-        if trip.id == trip_id:
-            trip = trip
-            break
+    # Find the trip matching the given trip_id and break if found
+    trip = next((t for t in trips if t.id == trip_id), None)
 
     if not trip:
         raise HTTPException(
@@ -60,7 +57,7 @@ def generate_itinerary_with_claude(user_id: int, trip_id: int, db: Session):
     # Format the user's trips to give claude a context
     trips_format = "\n".join(
         [
-            f"- {t.destination}: {t.days} days, budget ${t.budget}, style: {t.trip_style}"
+            f"- {t.destination}: {t.days} days, budget Rwf{t.budget}, style: {t.trip_style}"
             for t in trips
         ]
     )
@@ -68,7 +65,7 @@ def generate_itinerary_with_claude(user_id: int, trip_id: int, db: Session):
     prompt = (
         f"These planned trips:\n{trips_format}\n\n"
         f"Generate a day-by-day itinerary for the trip to {trip.destination} "
-        f"({trip.days} days, budget ${trip.budget}, style: {trip.trip_style}). "
+        f"({trip.days} days, budget Rwf{trip.budget}, style: {trip.trip_style}). "
         f"Use trip_id: {trip.id} in the JSON response."
     )
 
