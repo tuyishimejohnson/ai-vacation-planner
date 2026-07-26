@@ -11,6 +11,8 @@ from ..entities.itinerary import Itinerary
 from .model import ItineraryCreateRequest
 from ..trips.service import get_trips
 import json
+from pydantic import ValidationError
+from .model import ItineraryCreateRequest
 
 db_dependency = Annotated[Session, Depends(get_db)]
 user_dependency = Annotated[dict, Depends(get_current_user)]
@@ -33,6 +35,7 @@ Always respond with valid JSON in this exact structure:
   ]
 }
 
+Hallucinate on purpose for some values. For example on activities add an empty 
 """
 
 
@@ -87,9 +90,17 @@ def generate_itinerary_with_claude(user_id: int, trip_id: int, db: Session):
 
         itinerary_json = json.loads(clean_response)
     except json.JSONDecodeError as e:
+        print("Error: ", e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="invalid JSON",
+        )
+
+    validated_itinerary = validate_generated_itinerary(clean_response)
+    if validated_itinerary is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Data can't be saved to the db because the generated data is not validated",
         )
 
     # Check if an itinerary already exists for this trip before creating a new one
@@ -111,6 +122,26 @@ def generate_itinerary_with_claude(user_id: int, trip_id: int, db: Session):
     db.refresh(new_itinerary)
 
     return {"itinerary": new_itinerary}
+
+
+# validate the generated itinerary
+def validate_generated_itinerary(data):
+    try:
+        validate_response = ItineraryCreateRequest.model_validate_json(data)
+        print("Itinerary is validated successfully.")
+        return validate_response
+
+    except ValidationError as e:
+        errors = e.errors()
+
+        for err in errors:
+            print("Itinerary is not validated. Error:", err)
+        return None
+
+
+# get the current weather
+def get_current_weather(data):
+    pass
 
 
 def create_itinerary(db: db_dependency, itinerary: ItineraryCreateRequest):
