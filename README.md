@@ -90,6 +90,12 @@ Needs authentication
 
 - `POST /itineraries/` - create an itinerary for a trip
 - `GET /itineraries/{trip_id}` - get itinerary by trip ID
+- `POST /itinerares/generate/{trip_id}` - generate an itinerary from an LLM(claude)
+
+  ## Generate Itineraries
+  - Created a new route for generating itineraries based on created trip.
+  - Update `service.py` in itineraries to generate itinerary using `claude-haiku-4-5` model
+  - Store the generated response in database
 
 ## Project Structure
 
