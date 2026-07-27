@@ -10,9 +10,14 @@ from ..database.core import get_db
 from ..entities.itinerary import Itinerary
 from .model import ItineraryCreateRequest
 from ..trips.service import get_trips
-import json
+import json, requests
 from pydantic import ValidationError
 from .model import ItineraryCreateRequest
+
+weather_api_key = os.getenv("WEATHER_DATA")
+lat = None
+lng = None
+base_url = f"https://api.openweathermap.org/data/4.0/onecall/current?lat={lat}&lon={lon}&appid={weather_api_key}"
 
 db_dependency = Annotated[Session, Depends(get_db)]
 user_dependency = Annotated[dict, Depends(get_current_user)]
@@ -35,7 +40,6 @@ Always respond with valid JSON in this exact structure:
   ]
 }
 
-Hallucinate on purpose for some values. For example on activities add an empty 
 """
 
 
@@ -141,7 +145,13 @@ def validate_generated_itinerary(data):
 
 # get the current weather
 def get_current_weather(data):
-    pass
+    try:
+        response = requests.get(base_url)
+        data = response.json()
+        return data
+    except Exception as e:
+        print("Error: ", e)
+        return None
 
 
 def create_itinerary(db: db_dependency, itinerary: ItineraryCreateRequest):
