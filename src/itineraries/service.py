@@ -16,7 +16,7 @@ from .model import ItineraryCreateRequest
 
 weather_api_key = os.getenv("WEATHER_DATA")
 lat = None
-lng = None
+lon = None
 base_url = f"https://api.openweathermap.org/data/4.0/onecall/current?lat={lat}&lon={lon}&appid={weather_api_key}"
 
 db_dependency = Annotated[Session, Depends(get_db)]
