@@ -95,7 +95,14 @@ Needs authentication
   ## Generate Itineraries
   - Created a new route for generating itineraries based on created trip.
   - Update `service.py` in itineraries to generate itinerary using `claude-haiku-4-5` model
+  - After generating itinerary, the response is validated
+  - Clean the response and convert it in JSON format to send to the DB
   - Store the generated response in database
+
+  ### Add External Tool
+  - Added `get_current_weather(lat, lon)` in itineraries, to call the OpenWeatherMap API
+  - Registered it as a Claude tool (`weather_tool`) via the Messages API `tools` parameter, so Claude can request current weather for a location while generating an itinerary
+  - `generate_itinerary_with_claude` now runs a tool-use loop: when Claude responds with `stop_reason: "tool_use"`, the requested tool is executed and its result is sent back as a `tool_result` message until Claude returns the final itinerary text
 
 ## Project Structure
 
