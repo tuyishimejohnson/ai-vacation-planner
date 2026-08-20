@@ -1,58 +1,99 @@
 import sys
 
+from unstructured.chunking.title import chunk_by_title
+from unstructured.cleaners.core import clean_extra_whitespace, clean_non_ascii_chars
 from unstructured.documents.elements import Element
-from unstructured.partition.html import partition_html
+from unstructured.partition.auto import partition
 from unstructured.partition.pdf import partition_pdf
-from pathlib import Path
-
-faq_url = "https://teaspoonofadventure.com/75-questions-for-travellers/"
-
-
-def partition_article(url: str) -> list[Element]:
-    return partition_html(url=url, content_type="text/html")
-
-
-from pathlib import Path
-
-from unstructured.documents.elements import Element, NarrativeText, Title, ListItem
-from unstructured.partition.pdf import partition_pdf
-from unstructured.cleaners.core import (
-    clean,
-    clean_extra_whitespace,
-    replace_unicode_quotes,
+from unstructured.documents.elements import (
+    Element,
+    Header,
+    Footer,
 )
 
-DATA_DIR = Path("src/itineraries/data")
+faq_urls = [
+    "https://teaspoonofadventure.com/75-questions-for-travellers/",
+    "https://www.adventure-life.com/rwanda/articles/rwanda-faqs",
+]
 
 
-def partition_pdf_file(pdf_path: str, strategy: str = "hi-res") -> list[Element]:
-    return partition_pdf(filename=pdf_path, strategy=strategy)
+pdf_paths = [
+    "src/itineraries/data/The-Best-100-Travel-Tips-and-Hacks-by-Jessica-Ufuoma-1.pdf",
+    "src/itineraries/data/TravelTips-Oct2008.PDF",
+]
 
 
-def normalize_text(text: str) -> str:
-    text = replace_unicode_quotes(text)
-    text = clean_extra_whitespace(text)
-    text = clean(text, bullets=True, extra_whitespace=True, dashes=True)
-    return text
+# Partition articles urls
+def partition_article(urls):
+    results = {}
+
+    for url in urls:
+        results[url] = partition(url=url)
+
+    return results
 
 
-def normalize_elements(elements: list[Element]) -> list[Element]:
-    """Filter noise and clean text in-place."""
-    keep_types = (Title, NarrativeText, ListItem)
-    filtered = [el for el in elements if isinstance(el, keep_types)]
-    for el in filtered:
-        el.text = normalize_text(el.text)
-    return [el for el in filtered if el.text.strip()]
+# Partition pdf documents
+def partition_pdf_documents(pdf_paths):
+    results = {}
+
+    for pdf_path in pdf_paths:
+        results[pdf_path] = partition_pdf(filename=pdf_path)
+
+    return results
 
 
-def preprocess_pdf(pdf_path: str) -> list[Element]:
-    raw_elements = partition_pdf_file(pdf_path, strategy="hi-res")
-    return normalize_elements(raw_elements)
+# Clean the elements by removing empty
+def clean_elements(elements):
+    cleaned = []
 
-
-if __name__ == "__main__":
-    sys.stdout.reconfigure(encoding="utf-8")
-
-    elements = partition_article(faq_url)
     for element in elements:
-        print(f"[{element.category}] {element.text}")
+        if not element.text:
+            continue
+
+        text = clean_extra_whitespace(element.text)
+        text = clean_non_ascii_chars(text)
+
+        if not text.strip():
+            continue
+
+        element.text = text
+        cleaned.append(element)
+
+    return cleaned
+
+
+articles = partition_article(faq_urls)
+documents = partition_pdf_documents(pdf_paths)
+
+for source, elements in articles.items():
+    articles[source] = clean_elements(elements)
+
+for source, elements in documents.items():
+    documents[source] = clean_elements(elements)
+
+
+# Filter unecessary elements from the documents and articles
+def filter_elements(elements):
+    filtered = []
+
+    for element in elements:
+        if not element.text:
+            continue
+
+        text = element.text.strip()
+
+        if not text:
+            continue
+
+        # Remove very short fragments
+        if len(text) < 50:
+            continue
+
+        # Remove headers and footers
+        if isinstance(element, (Header, Footer)):
+            continue
+
+        filtered.append(element)
+
+    return filtered
