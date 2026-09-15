@@ -20,6 +20,10 @@ A backend API for planning vacations, built with FastAPI. Users can manage trips
 - **python-jose** - JWT token handling
 - **uvicorn** - ASGI server
 - **uv** - dependency installation
+- **Pinecone** - vector database for storing and querying travel document embeddings
+- **sentence-transformers** - embedding model (`all-MiniLM-L6-v2`) HuggingFace
+- **unstructured** - partitions and chunks travel articles/PDFs for the knowledge base
+- **Anthropic (claude-haiku-4-5)** - used in this context of generating responses
 
 ## Getting Started
 
@@ -104,6 +108,18 @@ Needs authentication
   - Registered it as a Claude tool (`weather_tool`) via the Messages API `tools` parameter, so Claude can request current weather for a location while generating an itinerary
   - `generate_itinerary_with_claude` now runs a tool-use loop: when Claude responds with `stop_reason: "tool_use"`, the requested tool is executed and its result is sent back as a `tool_result` message until Claude returns the final itinerary text
 
+### Travel Questions
+
+- `POST /travel/ask` - ask a travel question, answered via RAG system (pinecone + embeddings)
+
+  ## Build the Knowledge Base
+  - `src/notebooks/travel_knowledge.ipynb` builds the Pinecone index used by `/travel/ask`
+  - Partition travel articles urls and PDF documents with `unstructured`
+  - Clean, filter, and chunk the partitioned elements (`chunk_by_title`)
+  - Embed chunks with `sentence-transformers/all-MiniLM-L6-v2`
+  - Create the `travel-rag` Pinecone index
+  - Upload the Vectors to Pinecone
+
 ## Project Structure
 
 ```
@@ -128,7 +144,16 @@ vacation_planner/
 │   ├── itineraries/
 │   │   ├── controller.py
 │   │   ├── service.py
+│   │   ├── model.py
+│   │   └── data/
+│   │       ├── TravelTips-Oct2008.PDF
+│   │       └── The-Best-100-Travel-Tips-and-Hacks-by-Jessica-Ufuoma-1.pdf
+│   ├── travel_questions/
+│   │   ├── controller.py
+│   │   ├── service.py
 │   │   └── model.py
+│   ├── notebooks/
+│   │   └── travel_knowledge.ipynb
 │   ├── entities/
 │   │   ├── user.py
 │   │   ├── trip.py
