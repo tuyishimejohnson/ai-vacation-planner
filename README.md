@@ -110,7 +110,13 @@ Needs authentication
 
 ### Travel Questions
 
-- `POST /travel/ask` - ask a travel question, answered via RAG system (pinecone + embeddings)
+- `POST /travel/ask` - ask the vacation-planning agent any question. The agent selects the appropriate tool (weather, places, country data, exchange rates, or travel knowledge RAG) before responding.
+
+```json
+{"question": "What safety tips should I follow when travelling?"}
+```
+
+When the agent uses the travel knowledge tool, the response includes the retrieved document chunks in `sources`.
 
   ## Build the Knowledge Base
   - `src/notebooks/travel_knowledge.ipynb` builds the Pinecone index used by `/travel/ask`
