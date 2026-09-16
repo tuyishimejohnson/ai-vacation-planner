@@ -9,16 +9,33 @@ A backend API for planning vacations, built with FastAPI. Users can manage trips
 - Itinerary management - create and read itineraries linked to a trip
 - PostgreSQL database with Alembic migrations
 - Modular architecture - each domain (auth, users, trips, itineraries) has its own controller, service, and model
+- Add RAG system - allows the system retrieve travel information based on available documents and resources
+- Travel agent - uses LangChain + LangGraph to automate user query with an LLM
 
 ## Tech Stack
 
-- **FastAPI** - REST API framework and request validation
-- **SQLAlchemy** - ORM for PostgreSQL data access
-- **Alembic** - database schema migrations
-- **LangChain** - agent and tool integration
-- **LangGraph** - in-memory agent state and checkpointing
-- **Anthropic** - Claude-powered itinerary generation
-- **Pinecone** - vector database for travel knowledge retrieval
+- FastAPI - framework
+- SQLAlchemy - ORM
+- Alembic - database migrations
+- PostgreSQL - database
+- passlib + bcrypt - password hashing
+- python-jose - JWT token handling
+- uvicorn - ASGI server
+- uv - dependency installation
+- Pinecone - vector database for storing and querying travel document embeddings
+- sentence-transformers - embedding model (all-MiniLM-L6-v2) HuggingFace
+- unstructured - partitions and chunks travel articles/PDFs for the knowledge base
+- Anthropic (claude-haiku-4-5) - used in this context of generating responses
+- LangChain - tools and agent creation
+- LangGraph - State management and memory
+
+## Tools Used
+
+- **Current weather** - retrieves live weather conditions for a city through the OpenWeatherMap API
+- **Places search** - finds destinations, landmarks, hotels, restaurants, and other places through the Google Maps Places API
+- **Country information** - retrieves country details, capitals, currencies, languages, and time zones through the REST Countries API
+- **Exchange rates** - retrieves current exchange rates and converts amounts through the Exchange Rates API
+- **Travel knowledge search** - retrieves relevant travel tips, safety guidance, packing advice, and transportation information from Pinecone
 
 ## Getting Started
 
