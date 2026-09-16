@@ -12,18 +12,13 @@ A backend API for planning vacations, built with FastAPI. Users can manage trips
 
 ## Tech Stack
 
-- **FastAPI** - framework
-- **SQLAlchemy** - ORM
-- **Alembic** - database migrations
-- **PostgreSQL** - database
-- **passlib + bcrypt** - password hashing
-- **python-jose** - JWT token handling
-- **uvicorn** - ASGI server
-- **uv** - dependency installation
-- **Pinecone** - vector database for storing and querying travel document embeddings
-- **sentence-transformers** - embedding model (`all-MiniLM-L6-v2`) HuggingFace
-- **unstructured** - partitions and chunks travel articles/PDFs for the knowledge base
-- **Anthropic (claude-haiku-4-5)** - used in this context of generating responses
+- **FastAPI** - REST API framework and request validation
+- **SQLAlchemy** - ORM for PostgreSQL data access
+- **Alembic** - database schema migrations
+- **LangChain** - agent and tool integration
+- **LangGraph** - in-memory agent state and checkpointing
+- **Anthropic** - Claude-powered itinerary generation
+- **Pinecone** - vector database for travel knowledge retrieval
 
 ## Getting Started
 
@@ -94,37 +89,41 @@ Needs authentication
 
 - `POST /itineraries/` - create an itinerary for a trip
 - `GET /itineraries/{trip_id}` - get itinerary by trip ID
-- `POST /itinerares/generate/{trip_id}` - generate an itinerary from an LLM(claude)
+- `POST /itinerares/generate/{trip_id}` - generate an itinerary from an LLM (Claude)
 
   ## Generate Itineraries
-  - Created a new route for generating itineraries based on created trip.
-  - Update `service.py` in itineraries to generate itinerary using `claude-haiku-4-5` model
-  - After generating itinerary, the response is validated
-  - Clean the response and convert it in JSON format to send to the DB
-  - Store the generated response in database
+  - Created a new route for generating itineraries based on a created trip.
+  - Updated `service.py` in itineraries to generate itineraries using the `claude-haiku-4-5` model.
+  - The generated response is validated, cleaned, converted to JSON, and stored in the database.
 
   ### Add External Tool
-  - Added `get_current_weather(lat, lon)` in itineraries, to call the OpenWeatherMap API
-  - Registered it as a Claude tool (`weather_tool`) via the Messages API `tools` parameter, so Claude can request current weather for a location while generating an itinerary
-  - `generate_itinerary_with_claude` now runs a tool-use loop: when Claude responds with `stop_reason: "tool_use"`, the requested tool is executed and its result is sent back as a `tool_result` message until Claude returns the final itinerary text
+  - Added `get_current_weather(lat, lon)` in itineraries to call the OpenWeatherMap API.
+  - Registered it as a Claude tool (`weather_tool`) via the Messages API `tools` parameter, so Claude can request current weather for a location while generating an itinerary.
+  - `generate_itinerary_with_claude` runs a tool-use loop: when Claude responds with `stop_reason: "tool_use"`, the requested tool is executed and its result is sent back as a `tool_result` message until Claude returns the final itinerary text.
+
+  ### Tools added for LangChain
+  - Added exchange rate tool `get_exchange_rate`
+  - Added travel knowledge from RAG `search_travel_knowledge`
+  - Added Countries and cities tool `get_countries_and_cities`
 
 ### Travel Questions
 
 - `POST /travel/ask` - ask the vacation-planning agent any question. The agent selects the appropriate tool (weather, places, country data, exchange rates, or travel knowledge RAG) before responding.
 
 ```json
-{"question": "What safety tips should I follow when travelling?"}
+{ "question": "What safety tips should I follow when travelling?" }
 ```
 
 When the agent uses the travel knowledge tool, the response includes the retrieved document chunks in `sources`.
 
-  ## Build the Knowledge Base
-  - `src/notebooks/travel_knowledge.ipynb` builds the Pinecone index used by `/travel/ask`
-  - Partition travel articles urls and PDF documents with `unstructured`
-  - Clean, filter, and chunk the partitioned elements (`chunk_by_title`)
-  - Embed chunks with `sentence-transformers/all-MiniLM-L6-v2`
-  - Create the `travel-rag` Pinecone index
-  - Upload the Vectors to Pinecone
+## Build the Knowledge Base
+
+- `src/notebooks/travel_knowledge.ipynb` builds the Pinecone index used by `/travel/ask`
+- Partition travel article URLs and PDF documents with `unstructured`
+- Clean, filter, and chunk the partitioned elements with `chunk_by_title`
+- Embed chunks with `sentence-transformers/all-MiniLM-L6-v2`
+- Create the `travel-rag` Pinecone index
+- Upload the vectors to Pinecone
 
 ## Project Structure
 
@@ -135,40 +134,47 @@ vacation_planner/
 │   └── env.py
 ├── src/
 │   ├── main.py
+│   ├── agent/
+│   │   └── agent.py
 │   ├── auth/
 │   │   ├── controller.py
-│   │   ├── service.py
-│   │   └── model.py
-│   ├── users/
-│   │   ├── controller.py
-│   │   ├── service.py
-│   │   └── model.py
-│   ├── trips/
-│   │   ├── controller.py
-│   │   ├── service.py
-│   │   └── model.py
-│   ├── itineraries/
-│   │   ├── controller.py
-│   │   ├── service.py
 │   │   ├── model.py
-│   │   └── data/
-│   │       ├── TravelTips-Oct2008.PDF
-│   │       └── The-Best-100-Travel-Tips-and-Hacks-by-Jessica-Ufuoma-1.pdf
-│   ├── travel_questions/
+│   │   └── service.py
+│   ├── database/
+│   │   └── core.py
+│   ├── entities/
+│   │   ├── itinerary.py
+│   │   ├── trip.py
+│   │   └── user.py
+│   ├── itineraries/
+│   │   ├── data/
 │   │   ├── controller.py
-│   │   ├── service.py
-│   │   └── model.py
+│   │   ├── model.py
+│   │   └── service.py
 │   ├── notebooks/
 │   │   └── travel_knowledge.ipynb
-│   ├── entities/
-│   │   ├── user.py
-│   │   ├── trip.py
-│   │   └── itinerary.py
-│   └── database/
-│       └── core.py
-├── .env
+│   ├── tools/
+│   │   ├── countries.py
+│   │   ├── exchange_rate.py
+│   │   ├── places.py
+│   │   ├── travel_knowledge.py
+│   │   └── weather.py
+│   ├── travel_questions/
+│   │   ├── controller.py
+│   │   ├── model.py
+│   │   ├── retrieval.py
+│   │   └── service.py
+│   ├── trips/
+│   │   ├── controller.py
+│   │   ├── model.py
+│   │   └── service.py
+│   └── users/
+│       ├── controller.py
+│       ├── model.py
+│       └── service.py
 ├── .env.example
 ├── alembic.ini
 ├── pyproject.toml
-└── uv.lock
+├── uv.lock
+└── README.md
 ```
