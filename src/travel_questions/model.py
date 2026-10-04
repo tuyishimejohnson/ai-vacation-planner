@@ -11,7 +11,9 @@ class TravelSource(BaseModel):
 class TravelQuestionResponse(BaseModel):
     answer: str
     sources: List[TravelSource]
+    conversation_id: str
 
 
 class TravelQuestionRequest(BaseModel):
     question: str
+    conversation_id: str | None = None

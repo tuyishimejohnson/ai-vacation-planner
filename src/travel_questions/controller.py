@@ -17,4 +17,7 @@ router = APIRouter(
 async def ask_travel_question(
     request: TravelQuestionRequest,
 ):
-    return service.ask_travel_question(question=request.question)
+    return service.ask_travel_question(
+        question=request.question,
+        conversation_id=request.conversation_id,
+    )

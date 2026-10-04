@@ -131,7 +131,14 @@ Needs authentication
 { "question": "What safety tips should I follow when travelling?" }
 ```
 
-When the agent uses the travel knowledge tool, the response includes the retrieved document chunks in `sources`.
+The response includes a `conversation_id`. Send that ID in the request body on each follow-up question to continue the same conversation and let the agent use its in-memory conversation history:
+
+```json
+{
+  "question": "What did I just ask you?",
+  "conversation_id": "<conversation_id from the previous response>"
+}
+```
 
 ## Build the Knowledge Base
 

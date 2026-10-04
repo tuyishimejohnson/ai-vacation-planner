@@ -54,19 +54,21 @@ def _answer_content(message) -> str:
     return str(content)
 
 
-def ask_travel_question(question: str):
+def ask_travel_question(question: str, conversation_id: str | None = None):
     """Ask the tool-enabled agent through ``POST /travel/ask``.
 
     The agent selects the RAG tool for questions that need the indexed travel
     knowledge. Retrieved chunks are returned as response sources.
     """
+    conversation_id = conversation_id or str(uuid4())
     result = vacation_agent.invoke(
         {"messages": [{"role": "user", "content": question}]},
-        {"configurable": {"thread_id": str(uuid4())}},
+        {"configurable": {"thread_id": conversation_id}},
     )
     messages = result["messages"]
 
     return {
         "answer": _answer_content(messages[-1]),
         "sources": _tool_sources(messages),
+        "conversation_id": conversation_id,
     }
