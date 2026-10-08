@@ -1,28 +1,21 @@
-import argparse
 from functools import lru_cache
 from pathlib import Path
 
 import whisper
 
 SUPPORTED_AUDIO_EXTENSIONS = {
-    ".flac",
     ".mp3",
     ".mp4",
     ".mpeg",
     ".mpga",
     ".m4a",
-    ".ogg",
     ".wav",
     ".webm",
 }
 
 
 TRANSCRIPTION_MODEL = "base"
-DEFAULT_AUDIO_PATH = (
-    Path(__file__).resolve().parent
-    / "recorded_audio"
-    / "dynamic_output.wav"
-)
+DEFAULT_AUDIO_PATH = Path(__file__).resolve().parent
 
 
 @lru_cache(maxsize=2)
@@ -43,28 +36,3 @@ def transcribe_audio(audio_path: Path, model_name: str = TRANSCRIPTION_MODEL) ->
     model = _load_model(model_name)
     result = model.transcribe(str(audio_path))
     return result.get("text", "").strip()
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Transcribe an audio file with Whisper."
-    )
-    parser.add_argument(
-        "audio",
-        nargs="?",
-        type=Path,
-        default=DEFAULT_AUDIO_PATH,
-        help=f"Audio file to transcribe (default: {DEFAULT_AUDIO_PATH})",
-    )
-    parser.add_argument(
-        "--model",
-        default=TRANSCRIPTION_MODEL,
-        help=f"Whisper model to use (default: {TRANSCRIPTION_MODEL})",
-    )
-    args = parser.parse_args()
-
-    print(transcribe_audio(args.audio, args.model))
-
-
-if __name__ == "__main__":
-    main()

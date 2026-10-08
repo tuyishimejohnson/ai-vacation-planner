@@ -3,7 +3,7 @@ from pathlib import Path
 
 from gtts import gTTS
 
-DEFAULT_OUTPUT_FILE = Path(__file__).resolve().parent / "converted_text" / "output.mp3"
+DEFAULT_OUTPUT_FILE = Path(__file__).resolve().parent
 
 
 def convert_text_to_audio_bytes(text: str) -> bytes:
