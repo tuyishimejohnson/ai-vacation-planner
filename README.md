@@ -10,7 +10,9 @@ A backend API for planning vacations, built with FastAPI. Users can manage trips
 - PostgreSQL database with Alembic migrations
 - Modular architecture - each domain (auth, users, trips, itineraries) has its own controller, service, and model
 - Add RAG system - allows the system retrieve travel information based on available documents and resources
-- Travel agent - uses LangChain + LangGraph to automate user query with an LLM
+- Travel agent - uses LangChain + LangGraph to answer user questions with travel tools
+- MCP tool server - independently exposes the shared travel tools through FastMCP to Claude Desktop and the FastAPI app
+- Voice questions - transcribe microphone recordings with Whisper and play agent answers as speech using gTTS(google text-to-speech) model
 
 ## Tech Stack
 
@@ -28,6 +30,7 @@ A backend API for planning vacations, built with FastAPI. Users can manage trips
 - Anthropic (claude-haiku-4-5) - used in this context of generating responses
 - LangChain - tools and agent creation
 - LangGraph - State management and memory
+- FastMCP - exposes travel tools through the Model Context Protocol
 
 ## Tools Used
 
@@ -36,6 +39,8 @@ A backend API for planning vacations, built with FastAPI. Users can manage trips
 - **Country information** - retrieves country details, capitals, currencies, languages, and time zones through the REST Countries API
 - **Exchange rates** - retrieves current exchange rates and converts amounts through the Exchange Rates API
 - **Travel knowledge search** - retrieves relevant travel tips, safety guidance, packing advice, and transportation information from Pinecone
+
+The HTTP travel agent and the FastMCP server use the same LangChain tool implementations directly. The agent does not connect back to the MCP server to discover tools. The MCP endpoint is available at `http://localhost:8000/mcp/` when the FastAPI app is running.
 
 ## Getting Started
 
@@ -118,7 +123,7 @@ Needs authentication
   - Registered it as a Claude tool (`weather_tool`) via the Messages API `tools` parameter, so Claude can request current weather for a location while generating an itinerary.
   - `generate_itinerary_with_claude` runs a tool-use loop: when Claude responds with `stop_reason: "tool_use"`, the requested tool is executed and its result is sent back as a `tool_result` message until Claude returns the final itinerary text.
 
-  ### Tools added for LangChain
+  ### Shared tools
   - Added exchange rate tool `get_exchange_rate`
   - Added travel knowledge from RAG `search_travel_knowledge`
   - Added Countries and cities tool `get_countries_and_cities`
@@ -140,6 +145,11 @@ The response includes a `conversation_id`. Send that ID in the request body on e
 }
 ```
 
+### Voice input Questions
+
+- `POST /voice` - submit audio and receive its transcript and the agent's answer as JSON. Here the request transcribes audio using Whisper
+- `POST /travel/ask-audio` - submit audio and receive the agent's spoken answer as MP3. Use the `X-Conversation-Id` header to continue a conversation. Here the response is converted into audio using gTTS.
+
 ## Build the Knowledge Base
 
 - `src/notebooks/travel_knowledge.ipynb` builds the Pinecone index used by `/travel/ask`
@@ -160,6 +170,9 @@ vacation_planner/
 │   ├── main.py
 │   ├── agent/
 │   │   └── agent.py
+|   |__audio/
+|   |  |__convert_audio_to_text.py
+|   |  |__convert_text_to_audio.py
 │   ├── auth/
 │   │   ├── controller.py
 │   │   ├── model.py
@@ -184,10 +197,15 @@ vacation_planner/
 │   │   ├── travel_knowledge.py
 │   │   └── weather.py
 │   ├── travel_questions/
-│   │   ├── controller.py
-│   │   ├── model.py
-│   │   ├── retrieval.py
-│   │   └── service.py
+|   |   |__audio/
+│   │   |  ├── controller.py
+|   |   |  ├── model.py
+|   |   |  ├── retrieval.py
+|   |   |  └── service.py
+|   |   |__text/
+|   |   |   ├── controller.py
+|   |   |   ├── model.py
+|   |   |   └── service.py
 │   ├── trips/
 │   │   ├── controller.py
 │   │   ├── model.py
