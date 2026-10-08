@@ -1,14 +1,11 @@
 from dotenv import load_dotenv
-from langchain.agents import create_agent
 import requests
 import os
-from langchain.tools import tool
 
 load_dotenv()
 WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
 
 
-@tool
 def get_current_weather(city: str) -> str:
     """Get the current weather for a city by name (e.g. 'New York', 'London,UK')."""
 

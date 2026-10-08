@@ -1,14 +1,12 @@
 from dotenv import load_dotenv
 import os
 import requests
-from langchain.tools import tool
 
 load_dotenv()
 REST_COUNTRIES_API_KEY = os.getenv("REST_COUNTRIES_API_KEY")
 COUNTRIES_URL = "https://api.restcountries.com/countries/v5"
 
 
-@tool
 def get_countries_and_cities(query: str) -> dict:
     """Look up a country and its capital cities, plus basic country info."""
     if not REST_COUNTRIES_API_KEY:

@@ -1,7 +1,6 @@
 from dotenv import load_dotenv
 import os
 import requests
-from langchain.tools import tool
 
 load_dotenv()
 GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
@@ -15,7 +14,6 @@ def _require_api_key() -> str | None:
     return None
 
 
-@tool
 def search_places(query: str, limit: int = 5) -> dict:
     """Search Google Maps for places by name, type, or area.
 
