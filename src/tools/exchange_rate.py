@@ -1,13 +1,11 @@
 from dotenv import load_dotenv
 import os
 import requests
-from langchain.tools import tool
 
 load_dotenv()
 EXCHANGE_RATE_API_KEY = os.getenv("EXCHANGE_RATE_API_KEY")
 
 
-@tool
 def get_exchange_rate(
     from_currency: str,
     to_currency: str,

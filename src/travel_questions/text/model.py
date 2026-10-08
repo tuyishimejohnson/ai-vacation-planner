@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field
 from typing import List
+from pydantic import BaseModel
 
 
 class TravelSource(BaseModel):
@@ -17,3 +17,5 @@ class TravelQuestionResponse(BaseModel):
 class TravelQuestionRequest(BaseModel):
     question: str
     conversation_id: str | None = None
+
+
