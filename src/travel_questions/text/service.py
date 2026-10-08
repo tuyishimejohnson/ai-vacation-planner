@@ -1,8 +1,7 @@
 import json
 from uuid import uuid4
 
-from ..agent.agent import vacation_agent
-from .retrieval import get_relevant_chunks
+from ...agent.agent import vacation_agent
 
 
 def _tool_sources(messages) -> list[dict]:
@@ -54,14 +53,14 @@ def _answer_content(message) -> str:
     return str(content)
 
 
-def ask_travel_question(question: str, conversation_id: str | None = None):
+async def ask_travel_question(question: str, conversation_id: str | None = None):
     """Ask the tool-enabled agent through ``POST /travel/ask``.
 
     The agent selects the RAG tool for questions that need the indexed travel
     knowledge. Retrieved chunks are returned as response sources.
     """
     conversation_id = conversation_id or str(uuid4())
-    result = vacation_agent.invoke(
+    result = await vacation_agent.ainvoke(
         {"messages": [{"role": "user", "content": question}]},
         {"configurable": {"thread_id": conversation_id}},
     )

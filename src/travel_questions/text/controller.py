@@ -1,7 +1,7 @@
 from fastapi import APIRouter, status
 
 from .model import TravelQuestionRequest, TravelQuestionResponse
-from . import service
+from .service import ask_travel_question as ask_question
 
 router = APIRouter(
     prefix="/travel",
@@ -17,7 +17,7 @@ router = APIRouter(
 async def ask_travel_question(
     request: TravelQuestionRequest,
 ):
-    return service.ask_travel_question(
+    return await ask_question(
         question=request.question,
         conversation_id=request.conversation_id,
     )
